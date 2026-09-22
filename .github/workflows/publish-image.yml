@@ -1,0 +1,40 @@
+# Builds the unmodified upstream source at a pinned commit with the repo's own
+# Dockerfile and publishes it to GHCR, so hosts that reject cache mounts
+# (e.g. Railway) can run the image by digest.
+name: Publish image
+
+on:
+  workflow_dispatch:
+    inputs:
+      ref:
+        description: Commit to build
+        required: true
+        default: 5f16851c8ad46e2cb8e14fa04adb34bc0727aa95
+
+permissions:
+  contents: read
+  packages: write
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ inputs.ref }}
+      - uses: docker/setup-buildx-action@v3
+      - uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - id: build
+        uses: docker/build-push-action@v6
+        with:
+          context: .
+          file: Dockerfile
+          platforms: linux/amd64
+          push: true
+          tags: ghcr.io/${{ github.repository_owner }}/clinic-mock:${{ inputs.ref }}
+          labels: org.opencontainers.image.revision=${{ inputs.ref }}
+      - run: echo "digest=${{ steps.build.outputs.digest }} ref=${{ inputs.ref }}" | tee -a "$GITHUB_STEP_SUMMARY"
