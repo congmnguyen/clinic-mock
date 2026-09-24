@@ -171,10 +171,10 @@ CANONICAL_PATIENT_FIXTURES = [
     },
     {
         "id": "pt_demo_03",
-        "display_name": "V. Q.",
+        "display_name": "V. M. Q.",
         "phone": "0912345603",
         "dob": "2001-01-30",
-        "verify": {"full_name": "Võ Quỳnh", "dob": "2001-01-30"},
+        "verify": {"full_name": "Võ Minh Quân", "dob": "2001-01-30"},
     },
 ]
 
