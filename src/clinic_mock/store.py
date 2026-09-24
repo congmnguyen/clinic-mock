@@ -154,6 +154,28 @@ CANONICAL_PATIENT_FIXTURES = [
         "dob": "1978-03-14",
         "verify": {"full_name": "Nguyễn Văn A", "dob": "1978-03-14"},
     },
+    # Demo-only patients (fictional). Not part of the contract fixtures.
+    {
+        "id": "pt_demo_01",
+        "display_name": "T. T. B. N.",
+        "phone": "0912345601",
+        "dob": "1990-07-22",
+        "verify": {"full_name": "Trần Thị Bích Ngọc", "dob": "1990-07-22"},
+    },
+    {
+        "id": "pt_demo_02",
+        "display_name": "L. H. N.",
+        "phone": "0912345602",
+        "dob": "1965-11-05",
+        "verify": {"full_name": "Lê Hữu Nghĩa", "dob": "1965-11-05"},
+    },
+    {
+        "id": "pt_demo_03",
+        "display_name": "V. Q.",
+        "phone": "0912345603",
+        "dob": "2001-01-30",
+        "verify": {"full_name": "Võ Quỳnh", "dob": "2001-01-30"},
+    },
 ]
 
 CANONICAL_SLOT_FIXTURES = [
@@ -182,6 +204,46 @@ CANONICAL_APPOINTMENT_FIXTURES = [
         "patient_id": "pt_3391",
         "attempt_count": 0,
         "version": 3,
+    },
+    # Demo-only appointments (fictional patients above).
+    {
+        "appointment_id": "apt_00501",
+        "slot_id": "slot_demo_01",
+        "provider_id": "pr_vinmec_1",
+        "status": "SCHEDULED",
+        "clinic_id": "cl_vinmec",
+        "starts_at": "2026-10-16T09:00:00+07:00",
+        "ends_at": "2026-10-16T09:30:00+07:00",
+        "department": "Tim mạch",
+        "patient_id": "pt_demo_01",
+        "attempt_count": 0,
+        "version": 1,
+    },
+    {
+        "appointment_id": "apt_00502",
+        "slot_id": "slot_demo_02",
+        "provider_id": "pr_vinmec_1",
+        "status": "CANCELLED",
+        "clinic_id": "cl_vinmec",
+        "starts_at": "2026-10-17T10:30:00+07:00",
+        "ends_at": "2026-10-17T11:00:00+07:00",
+        "department": "Cơ xương khớp",
+        "patient_id": "pt_demo_02",
+        "attempt_count": 0,
+        "version": 1,
+    },
+    {
+        "appointment_id": "apt_00503",
+        "slot_id": "slot_demo_03",
+        "provider_id": "pr_vinmec_1",
+        "status": "SCHEDULED",
+        "clinic_id": "cl_vinmec",
+        "starts_at": "2026-10-20T14:00:00+07:00",
+        "ends_at": "2026-10-20T14:30:00+07:00",
+        "department": "Da liễu",
+        "patient_id": "pt_demo_03",
+        "attempt_count": 0,
+        "version": 1,
     },
 ]
 
