@@ -10,6 +10,8 @@ keep the existing suffix trick so isolation tests still see distinct rows.
 
 from __future__ import annotations
 
+import json
+import os
 import uuid
 from datetime import UTC, datetime
 
@@ -376,6 +378,15 @@ CANONICAL_APPOINTMENT_FIXTURES = [
         "version": 3,
     },
 ]
+
+
+# Demo deployments only: extra fixtures from the environment, so names and birth dates
+# of real people never live in this public repo. JSON object with optional
+# "patients", "slots" and "appointments" lists shaped like the canonical ones above.
+_DEMO = json.loads(os.environ.get("MOCK_DEMO_FIXTURES") or "{}")
+CANONICAL_PATIENT_FIXTURES += _DEMO.get("patients", [])
+CANONICAL_SLOT_FIXTURES += _DEMO.get("slots", [])
+CANONICAL_APPOINTMENT_FIXTURES += _DEMO.get("appointments", [])
 
 
 def _seed_tenants() -> list[str]:
