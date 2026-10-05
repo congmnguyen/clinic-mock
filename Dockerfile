@@ -13,7 +13,7 @@ ENV UV_LINK_MODE=copy \
 WORKDIR /app
 
 # Install dependencies with cache mount (layer-cached, no project install yet).
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,id=s/b0935539-2c66-40e0-bf23-2ee5574dd803-uv,target=/root/.cache/uv \
     --mount=type=bind,source=uv.lock,target=uv.lock \
     --mount=type=bind,source=pyproject.toml,target=pyproject.toml \
     uv sync --frozen --no-install-project --no-dev
@@ -21,7 +21,7 @@ RUN --mount=type=cache,target=/root/.cache/uv \
 # Copy source and install the project itself.
 COPY pyproject.toml uv.lock README.md ./
 COPY src ./src
-RUN --mount=type=cache,target=/root/.cache/uv \
+RUN --mount=type=cache,id=s/b0935539-2c66-40e0-bf23-2ee5574dd803-uv,target=/root/.cache/uv \
     uv sync --frozen --no-dev
 
 
