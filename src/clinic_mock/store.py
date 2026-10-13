@@ -13,7 +13,8 @@ from __future__ import annotations
 import json
 import os
 import uuid
-from datetime import UTC, datetime
+from datetime import UTC, date, datetime, timedelta
+from zoneinfo import ZoneInfo
 
 from clinic_mock.auth import derive_tenant_id
 from clinic_mock.schemas import (
@@ -382,11 +383,37 @@ CANONICAL_APPOINTMENT_FIXTURES = [
 
 # Demo deployments only: extra fixtures from the environment, so names and birth dates
 # of real people never live in this public repo. JSON object with optional
-# "patients", "slots" and "appointments" lists shaped like the canonical ones above.
+# "patients", "slots" and "appointments" lists shaped like the canonical ones above
+# (a row with a canonical id replaces it), and an optional "anchor" (see demo_shift).
 _DEMO = json.loads(os.environ.get("MOCK_DEMO_FIXTURES") or "{}")
 CANONICAL_PATIENT_FIXTURES += _DEMO.get("patients", [])
 CANONICAL_SLOT_FIXTURES += _DEMO.get("slots", [])
 CANONICAL_APPOINTMENT_FIXTURES += _DEMO.get("appointments", [])
+DEMO_ANCHOR: str | None = _DEMO.get("anchor")
+DEMO_TIMEZONE = ZoneInfo("Asia/Ho_Chi_Minh")
+
+
+def demo_shift(today: date | None = None) -> timedelta:
+    """How far the canonical slots and appointments move forward when seeded.
+
+    A demo deployment writes its fixtures for the week that starts on its "anchor"
+    (YYYY-MM-DD, a Monday). Seeded in a later week, at boot or on /_harness/reset,
+    every slot and appointment moves on by whole weeks, so a demo never offers a past
+    slot or reminds about a past visit: weekdays and the distance from today stay as
+    written. `MOCK_DEMO_TODAY` (YYYY-MM-DD) stands in for today, for rehearsing a
+    future day. Without an anchor nothing moves, as in the public mock.
+    """
+    if not DEMO_ANCHOR:
+        return timedelta(0)
+    if today is None:
+        override = os.environ.get("MOCK_DEMO_TODAY")
+        today = date.fromisoformat(override) if override else datetime.now(DEMO_TIMEZONE).date()
+    weeks = (today - date.fromisoformat(DEMO_ANCHOR)).days // 7
+    return timedelta(weeks=max(weeks, 0))
+
+
+def _moved(value: str, shift: timedelta) -> str:
+    return (datetime.fromisoformat(value) + shift).isoformat() if shift else value
 
 
 def _seed_tenants() -> list[str]:
@@ -436,19 +463,19 @@ def _seed_canonical_patients() -> None:
         )
 
 
-def _seed_canonical_slots() -> None:
+def _seed_canonical_slots(shift: timedelta) -> None:
     for f in CANONICAL_SLOT_FIXTURES:
         db.slots[f["slot_id"]] = Slot(
             slot_id=f["slot_id"],
             tenant_id=CANONICAL_TENANT,
             clinic_id=f["clinic_id"],
-            start_time=f["start_time"],
-            end_time=f["end_time"],
+            start_time=_moved(f["start_time"], shift),
+            end_time=_moved(f["end_time"], shift),
             provider_id=f["provider_id"],
         )
 
 
-def _seed_canonical_appointments() -> None:
+def _seed_canonical_appointments(shift: timedelta) -> None:
     for f in CANONICAL_APPOINTMENT_FIXTURES:
         patient = db.patients[f["patient_id"]]
         appt = Appointment(
@@ -458,8 +485,8 @@ def _seed_canonical_appointments() -> None:
             provider_id=f["provider_id"],
             status=f["status"],
             clinic_id=f["clinic_id"],
-            starts_at=f["starts_at"],
-            ends_at=f["ends_at"],
+            starts_at=_moved(f["starts_at"], shift),
+            ends_at=_moved(f["ends_at"], shift),
             department=f["department"],
             patient=PatientRef(
                 patient_id=patient.patient_id,
@@ -483,9 +510,10 @@ def seed_default() -> None:
     db.system_clock_offset_sec = 0
     tenants = _seed_tenants()
 
+    shift = demo_shift()
     _seed_canonical_patients()
-    _seed_canonical_slots()
-    _seed_canonical_appointments()
+    _seed_canonical_slots(shift)
+    _seed_canonical_appointments(shift)
 
     for tenant in tenants:
         suffix = _scope_suffix(tenant)
